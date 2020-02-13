@@ -5,7 +5,7 @@
     <Button @click="showModal">添加</Button>
     <!-- 添加/修改Modal -->
     <Modal v-model="addModalShow" title="TODOLIST" :footer-hide="true">
-      <Form ref="formValidate" :model="formValidate" :label-width="80">
+      <Form ref="formValidate" :model="formValidate" :rules="ruleValidate" :label-width="80">
         <FormItem label="权重" prop="weight">
           <InputNumber v-model="formValidate.weight"></InputNumber>
         </FormItem>
@@ -22,7 +22,10 @@
         <FormItem>
           <Button type="primary" @click="add()" v-if="addFlag">确定</Button>
           <Button type="primary" @click="update()" v-else>确定</Button>
-          <Button @click="handleReset('formValidate')" style="margin-left: 8px">取消</Button>
+          <Button
+            @click="handleReset('formValidate');addModalShow = false"
+            style="margin-left: 8px"
+          >取消</Button>
         </FormItem>
       </Form>
     </Modal>
@@ -104,6 +107,15 @@ export default {
       formValidate: {
         weight: 1,
         info: ""
+      },
+      ruleValidate: {
+        info: [
+          {
+            required: true,
+            message: "Please enter something",
+            trigger: "blur"
+          }
+        ]
       }
     };
   },
@@ -130,20 +142,23 @@ export default {
     showModal() {
       this.addModalShow = true; // 显示
       this.addFlag = true; // 修改添加标实
-      this.handleReset('formValidate'); // 重置表单
+      this.handleReset("formValidate"); // 重置表单
     },
     // 添加
     add() {
-      console.log(this.formValidate);
-      this.$http.post("/apiUrl/list", this.formValidate).then(result => {
-        this.getlists();
-        this.addModalShow = false;
+      this.$refs["formValidate"].validate(valid => {
+        if (valid) {
+          console.log(this.formValidate);
+          this.$http.post("/apiUrl/list", this.formValidate).then(result => {
+            this.getlists();
+            this.addModalShow = false;
+          });
+        }
       });
     },
     // 重置表单
     handleReset(name) {
       this.$refs[name].resetFields();
-      this.addModalShow = false;
     },
     // 删除
     del(id) {
